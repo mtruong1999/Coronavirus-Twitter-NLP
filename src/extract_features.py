@@ -9,7 +9,7 @@ from sklearn.feature_extraction.text import TfidfTransformer
 DATA_SOURCE = ""
 
 # Some variables for testing
-read_nrows = None  # When None, all rows are read.
+read_nrows = 1000  # When None, all rows are read.
 
 
 def read_input_data(filepath):
@@ -31,14 +31,15 @@ def read_input_data(filepath):
     return df_data
 
 
-def get_bag_of_words(data):
-    count_vect = CountVectorizer()
-    if DATA_SOURCE == "stanford":
-        train_data = data[5].values
-    elif DATA_SOURCE == "kaggle":
-        train_data = data.OriginalTweet.values
-    # print(train_data)
-    X_train_counts = count_vect.fit_transform(train_data)
+def get_bag_of_words(data, ngram_flag):
+    """ Given data, return a bag of words downscaled into "term frequency times inverse document frequency” (tf–idf).
+    """
+    if ngram_flag:
+        vectorizer = CountVectorizer()
+        X_train_counts = vectorizer.fit_transform(train_data)
+    else:
+        vectorizer = CountVectorizer(analyzer="char_wb", ngram_range=(5, 5))
+        X_train_counts = vectorizer.fit_transform(train_data)
 
     tfidf_transformer = TfidfTransformer()
     X_train_tfidf = tfidf_transformer.fit_transform(X_train_counts)
@@ -46,16 +47,25 @@ def get_bag_of_words(data):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
+    if len(sys.argv) != 3:
         # <Path to Data Directory> - folder where data is located, in each algo
-        print("Error: Given " + str(len(sys.argv) - 1) + " arguments but expected 1.")
-        print("Usage: python3 src/extract_features.py <Path to Data File>")
+        print("Error: Given " + str(len(sys.argv) - 1) + " arguments but expected 2.")
+        print(
+            "Usage: python3 src/extract_features.py <ngram bag of words flag: 0 for unigram, 1 for ngram> <Path to Data File>"
+        )
         sys.exit(1)
 
     dataPath = sys.argv[1]
+    ngram_flag = sys.argv[2]
 
     df_data = read_input_data(dataPath)
     print(df_data)
 
-    X_train_tfidf = get_bag_of_words(df_data)
+    if DATA_SOURCE == "stanford":
+        train_data = df_data[5].values
+    elif DATA_SOURCE == "kaggle":
+        train_data = df_data.OriginalTweet.values
+
+    X_train_tfidf = get_bag_of_words(train_data, ngram_flag)
     print(X_train_tfidf)
+
