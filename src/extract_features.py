@@ -16,7 +16,7 @@ DATA_SOURCE = ""
 STOP_WORDS = []
 
 # Some variables for testing
-read_nrows = 1000  # When None, all rows are read.
+read_nrows = 51  # When None, all rows are read.
 
 
 def text_filter(text):
@@ -25,9 +25,8 @@ def text_filter(text):
     text = re.sub(r"#|(@\w+)", "", text)  # e.g. @Tim Hi #hello --> ' Hi hello'
 
     # Remove links (e.g. any that starts with https, http, www)
-    # Tried so many...these were the simplest that actually worked
-    text = re.sub(r"https?://\S+", "", text)
-    text = re.sub(r"www.\S+", "", text)
+    # Tried so many...this was the simplest that actually worked
+    text = re.sub(r"https?://\S+|www.\S+", "", text)
 
     # Remove punctuation, underscores, and other random symbols
     text = re.sub(r"[^\w\s]|_", "", text)  # e.g. 's. Hey. +_=Woo' --> 's Hey Woo'
@@ -112,9 +111,11 @@ if __name__ == "__main__":
 
     df_data = read_input_data(dataPath)
     print(df_data)
+    print(df_data[5][50])
 
     preprocess_data(df_data)
     print(df_data)
+    print(df_data[5][50])
 
     if DATA_SOURCE == "stanford":
         train_data = df_data[5]
