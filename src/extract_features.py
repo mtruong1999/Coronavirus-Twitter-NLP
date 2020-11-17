@@ -24,7 +24,10 @@ def text_filter(text):
     # Replace all tagged users from text (e.g. '@mike12') and removes '#' but keeps the words
     text = re.sub(r"#|(@\w+)", "", text)  # e.g. @Tim Hi #hello --> ' Hi hello'
 
-    # TODO: Remove links (e.g. any that starts with https, http, www)
+    # Remove links (e.g. any that starts with https, http, www)
+    # Tried so many...these were the simplest that actually worked
+    text = re.sub(r"https?://\S+", "", text)
+    text = re.sub(r"www.\S+", "", text)
 
     # Remove punctuation, underscores, and other random symbols
     text = re.sub(r"[^\w\s]|_", "", text)  # e.g. 's. Hey. +_=Woo' --> 's Hey Woo'
