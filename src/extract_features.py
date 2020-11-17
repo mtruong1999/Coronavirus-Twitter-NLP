@@ -16,11 +16,11 @@ DATA_SOURCE = ""
 STOP_WORDS = []
 
 # Some variables for testing
-read_nrows = 51  # When None, all rows are read.
+read_nrows = 1000  # When None, all rows are read.
 
 
 def text_filter(text):
-    text.lower()
+    text = text.lower()
     # Replace all tagged users from text (e.g. '@mike12') and removes '#' but keeps the words
     text = re.sub(r"#|(@\w+)", "", text)  # e.g. @Tim Hi #hello --> ' Hi hello'
 
@@ -111,11 +111,9 @@ if __name__ == "__main__":
 
     df_data = read_input_data(dataPath)
     print(df_data)
-    print(df_data[5][50])
 
     preprocess_data(df_data)
     print(df_data)
-    print(df_data[5][50])
 
     if DATA_SOURCE == "stanford":
         train_data = df_data[5]
