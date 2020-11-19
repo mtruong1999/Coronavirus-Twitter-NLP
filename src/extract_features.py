@@ -1,6 +1,7 @@
 import sys
 import os
 import pandas as pd
+import pickle
 import re
 import string
 
@@ -16,7 +17,7 @@ DATA_SOURCE = ""
 STOP_WORDS = []
 
 # Some variables for testing
-read_nrows = 1000  # When None, all rows are read.
+read_nrows = None  # When None, all rows are read.
 
 
 def text_filter(text):
@@ -83,7 +84,7 @@ def read_input_data(filepath):
 def get_bag_of_words(data, ngram_flag):
     """ Given data, return a bag of words downscaled into "term frequency times inverse document frequency” (tf–idf).
     """
-    if ngram_flag:
+    if int(ngram_flag):
         vectorizer = CountVectorizer()
         X_train_counts = vectorizer.fit_transform(data)
     else:
@@ -96,16 +97,18 @@ def get_bag_of_words(data, ngram_flag):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
+    if len(sys.argv) != 4:
         # <Path to Data Directory> - folder where data is located, in each algo
-        print("Error: Given " + str(len(sys.argv) - 1) + " arguments but expected 2.")
+        print("Error: Given " + str(len(sys.argv) - 1) + " arguments but expected 3.")
         print(
-            "Usage: python3 src/extract_features.py <ngram bag of words flag: 0 for unigram, 1 for ngram> <Path to Data File>"
+            "Usage: python3 src/extract_features.py <Path to Data File> <save to pickle? 0 for no, 1 for yes>"
+            " <ngram bag of words flag: 0 for unigram, 1 for ngram>"
         )
         sys.exit(1)
 
     dataPath = sys.argv[1]
-    ngram_flag = sys.argv[2]
+    save_to_pkl = sys.argv[2]
+    ngram_flag = sys.argv[3]
 
     df_data = read_input_data(dataPath)
     print(df_data)
@@ -120,4 +123,32 @@ if __name__ == "__main__":
 
     X_train_tfidf = get_bag_of_words(train_data, ngram_flag)
     print(X_train_tfidf)
+
+    if save_to_pkl:
+        print("Saving data to pickle...")
+        if int(ngram_flag):
+            pickle.dump(
+                X_train_tfidf,
+                open(
+                    "../project_data_pickles/"
+                    + DATA_SOURCE
+                    + "_"
+                    + str(read_nrows)
+                    + "rows_ngram_tfidf.pkl",
+                    "wb",
+                ),
+            )
+        else:
+            pickle.dump(
+                X_train_tfidf,
+                open(
+                    "../project_data_pickles/"
+                    + DATA_SOURCE
+                    + "_"
+                    + str(read_nrows)
+                    + "rows_unigramgram_tfidf.pkl",
+                    "wb",
+                ),
+            )
+        print("Done")
 
