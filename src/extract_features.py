@@ -128,18 +128,20 @@ def lemmatization(data):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 4:
+    if len(sys.argv) != 5:
         # <Path to Data Directory> - folder where data is located, in each algo
         print("Error: Given " + str(len(sys.argv) - 1) + " arguments but expected 3.")
         print(
             "Usage: python3 src/extract_features.py <Path to Data File> <save to pickle? 0 for no, 1 for yes>"
             " <ngram bag of words flag: 0 for unigram, 1 for ngram>"
+            "<normalization type: stem, lemmatize or none>"
         )
         sys.exit(1)
 
     dataPath = sys.argv[1]
     save_to_pkl = sys.argv[2]
     ngram_flag = sys.argv[3]
+    norm_flag = sys.argv[4]
 
     df_data = read_input_data(dataPath)
     print(df_data)
@@ -152,14 +154,16 @@ if __name__ == "__main__":
     elif DATA_SOURCE == "kaggle":
         train_data = df_data["OriginalTweet"]
 
-    # train_data = stemming(train_data)
-    # train_data = lemmatization(train_data)
-    # print(train_data)
+    if norm_flag == "stem":
+        train_data = stemming(train_data)
+    if norm_flag == "lemmatize":
+        train_data = lemmatization(train_data)
+    print(train_data)
 
     X_train_tfidf = get_bag_of_words(train_data, ngram_flag)
     print(X_train_tfidf)
 
-    if save_to_pkl:
+    if int(save_to_pkl):
         print("Saving data to pickle...")
         if int(ngram_flag):
             pickle.dump(
