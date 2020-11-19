@@ -6,7 +6,8 @@ import string
 
 import nltk
 from nltk.corpus import stopwords
-from nltk import word_tokenize
+from nltk import word_tokenize, WordNetLemmatizer
+from nltk.stem import PorterStemmer
 
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
@@ -97,6 +98,34 @@ def get_bag_of_words(data, ngram_flag):
     return X_train_tfidf
 
 
+def stem(text):
+    ps = PorterStemmer()
+    stemmed_text = [ps.stem(word) for word in text]
+    return " ".join(stemmed_text)
+
+
+def stemming(data):
+    token_data = data.apply(lambda x: word_tokenize(x))
+    stem_data = token_data.apply(lambda x: stem(x))
+    return stem_data
+
+
+def lemmatize(text):
+    wn = WordNetLemmatizer()
+    try:
+        lemmatized_text = [wn.lemmatize(word) for word in text]
+    except LookupError:
+        nltk.download('wordnet')
+        lemmatized_text = [wn.lemmatize(word) for word in text]
+    return " ".join(lemmatized_text)
+
+
+def lemmatization(data):
+    token_data = data.apply(lambda x: word_tokenize(x))
+    lemmatized_data = token_data.apply(lambda x: lemmatize(x))
+    return lemmatized_data
+
+
 if __name__ == "__main__":
     if len(sys.argv) != 3:
         # <Path to Data Directory> - folder where data is located, in each algo
@@ -119,6 +148,10 @@ if __name__ == "__main__":
         train_data = df_data[5]
     elif DATA_SOURCE == "kaggle":
         train_data = df_data["OriginalTweet"]
+
+    # train_data = stemming(train_data)
+    # train_data = lemmatization(train_data)
+    # print(train_data)
 
     X_train_tfidf = get_bag_of_words(train_data, ngram_flag)
     print(X_train_tfidf)
