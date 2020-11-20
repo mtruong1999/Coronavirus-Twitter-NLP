@@ -124,7 +124,7 @@ if __name__ == "__main__":
     X_train_tfidf = get_bag_of_words(train_data, ngram_flag)
     print(X_train_tfidf)
 
-    if save_to_pkl:
+    if int(save_to_pkl):
         print("Saving data to pickle...")
         if int(ngram_flag):
             pickle.dump(
