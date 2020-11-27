@@ -151,8 +151,12 @@ if __name__ == "__main__":
 
     if DATA_SOURCE == "stanford":
         train_data = df_data[5]
+        y_train = df_data[0].to_numpy()
+        ids = df_data[1].to_numpy()
     elif DATA_SOURCE == "kaggle":
         train_data = df_data["OriginalTweet"]
+        y_train = df_data['Sentiment'].to_numpy()
+        ids = df_data['UserName'].to_numpy()
 
     if norm_flag == "stem":
         train_data = stemming(train_data)
@@ -163,11 +167,15 @@ if __name__ == "__main__":
     X_train_tfidf = get_bag_of_words(train_data, ngram_flag)
     print(X_train_tfidf)
 
+    new_data = {'data': X_train_tfidf, 'labels': y_train, 'id': ids}
+
+
     if int(save_to_pkl):
         print("Saving data to pickle...")
         if int(ngram_flag):
             pickle.dump(
-                X_train_tfidf,
+                # X_train_tfidf,
+                new_data,
                 open(
                     "../project_data_pickles/"
                     + DATA_SOURCE
@@ -179,7 +187,8 @@ if __name__ == "__main__":
             )
         else:
             pickle.dump(
-                X_train_tfidf,
+                # X_train_tfidf,
+                new_data,
                 open(
                     "../project_data_pickles/"
                     + DATA_SOURCE
