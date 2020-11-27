@@ -12,13 +12,13 @@ from nltk.stem import PorterStemmer
 
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
-
+from sklearn import preprocessing
 # Global Variables
 DATA_SOURCE = ""
 STOP_WORDS = []
 
 # Some variables for testing
-read_nrows = None  # When None, all rows are read.
+read_nrows = 1000  # When None, all rows are read.
 
 
 def text_filter(text):
@@ -63,6 +63,11 @@ def preprocess_data(data):
         data[5] = data[5].apply(text_filter)
     elif DATA_SOURCE == "kaggle":
         data["OriginalTweet"] = data["OriginalTweet"].apply(text_filter)
+
+        # TODO: encode labels to the ints we want
+        le_sentiments = preprocessing.LabelEncoder()
+        data['Sentiment'] = le_sentiments.fit_transform(data['Sentiment'])
+
 
 
 def read_input_data(filepath):
@@ -151,12 +156,12 @@ if __name__ == "__main__":
 
     if DATA_SOURCE == "stanford":
         train_data = df_data[5]
-        y_train = df_data[0].to_numpy()
-        ids = df_data[1].to_numpy()
+        y_train = df_data[0]
+        ids = df_data[1]
     elif DATA_SOURCE == "kaggle":
         train_data = df_data["OriginalTweet"]
-        y_train = df_data['Sentiment'].to_numpy()
-        ids = df_data['UserName'].to_numpy()
+        y_train = df_data['Sentiment']
+        ids = df_data['UserName']
 
     if norm_flag == "stem":
         train_data = stemming(train_data)
