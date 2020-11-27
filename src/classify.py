@@ -7,11 +7,6 @@ from artificial_neural_network import ArtificialNeuralNetwork
 from naive_bayes import NaiveBayes
 
 CLASSIFIER_TO_CONSTRUCTOR = {"nb" : NaiveBayes, "ann" : ArtificialNeuralNetwork}
-# TODO: Maybe create a separate 'extract features' MAIN file that does all of the
-# data cleaning/processing etc. and saves the extracted features to a .npy or some
-# other file to be loaded in by the algorithms. 
-# OR: We can have each algorithm do the data extraction itself. Option 1 might be more
-# efficient to avoid having to process the data everytime we run
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -28,7 +23,7 @@ if __name__ == "__main__":
                         help='name of test pickle file')
 
     args = parser.parse_args()
-    
+
     dataDirPath = sys.argv[1]
     classifier_type = sys.argv[2]
 

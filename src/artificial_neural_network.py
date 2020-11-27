@@ -22,7 +22,7 @@ class ArtificialNeuralNetwork(object):
         """
         self.ann = self.nn()
 
-    def __call__(self, dataDirPath, idSentiments, train_file='kaggle_1000rows_ngram_tfidf.pkl', test_file=None):
+    def __call__(self, dataDirPath, idSentiments, train_file, test_file):
         model = self.ann
 
         # Get data and lables from pickle file
@@ -67,8 +67,9 @@ class ArtificialNeuralNetwork(object):
                 counter = 0
 
     def nn(self):
+        # TODO: get input_dim for now all data is 53335 and 1000 rows is 5135
         model = Sequential()
-        model.add(Dense(64, activation='relu', input_dim=5135))
+        model.add(Dense(64, activation='relu', input_dim=53335))
         model.add(Dense(5, activation='softmax'))
         model.compile(optimizer='adam',
                       loss='sparse_categorical_crossentropy',

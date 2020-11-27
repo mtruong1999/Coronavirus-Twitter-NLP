@@ -35,7 +35,6 @@ class NaiveBayes(object):
             test_pkl_file = open(os.path.join(dataDirPath, test_file), 'rb')
             test = pickle.load(test_pkl_file)
             X_test = test['data']
-            y_test = test['labels']  # do we need this for the test data???
             model.fit(X, y)
             y_pred = model.predict(X_test)
             idSentiments['id'] = test['id']
