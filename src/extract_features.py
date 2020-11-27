@@ -18,7 +18,7 @@ DATA_SOURCE = ""
 STOP_WORDS = []
 
 # Some variables for testing
-read_nrows = 1000  # When None, all rows are read.
+read_nrows = None  # When None, all rows are read.
 
 
 def text_filter(text):

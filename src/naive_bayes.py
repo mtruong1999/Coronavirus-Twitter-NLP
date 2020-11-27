@@ -15,7 +15,7 @@ class NaiveBayes(object):
     def __init__(self):
         self.model = MultinomialNB()
 
-    def __call__(self, dataDirPath, idSentiments, train_file='kaggle_1000rows_ngram_tfidf.pkl', test_file=None):
+    def __call__(self, dataDirPath, idSentiments, train_file, test_file):
         model = self.model
 
         # Get data and labels from pickle file
