@@ -4,6 +4,7 @@ import pandas as pd
 import pickle
 import re
 import string
+from utils import *
 
 import nltk
 from nltk.corpus import stopwords
@@ -61,13 +62,10 @@ def preprocess_data(data):
 
     if DATA_SOURCE == "stanford":
         data[5] = data[5].apply(text_filter)
+        # TODO: change sentiments to integers for stanford data
     elif DATA_SOURCE == "kaggle":
         data["OriginalTweet"] = data["OriginalTweet"].apply(text_filter)
-
-        # TODO: encode labels to the ints we want
-        le_sentiments = preprocessing.LabelEncoder()
-        data['Sentiment'] = le_sentiments.fit_transform(data['Sentiment'])
-
+        data['Sentiment'] = data['Sentiment'].apply(lambda x: sentiment_to_int(x))
 
 
 def read_input_data(filepath):
