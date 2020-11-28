@@ -4,11 +4,15 @@ import numpy as np
 import pickle
 from keras.models import Sequential
 from keras.layers import Dense, Dropout
+from keras.callbacks import ModelCheckpoint
 from keras.layers import Flatten
 from keras.layers.embeddings import Embedding
 from keras.preprocessing import sequence
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
+
+# Code adapted from
+# https://towardsdatascience.com/another-twitter-sentiment-analysis-with-python-part-9-neural-networks-with-tfidf-vectors-using-d0b4af6be6d7
 
 
 class ArtificialNeuralNetwork(object):
@@ -25,17 +29,21 @@ class ArtificialNeuralNetwork(object):
     def __call__(self, dataDirPath, idSentiments, train_file, test_file):
         model = self.ann
 
-        # Get data and lables from pickle file
+        # Get data and labels from pickle file
         pickle_file = open(os.path.join(dataDirPath, train_file), 'rb')
         train = pickle.load(pickle_file)
         X = train['data']
         y = train['labels']
 
         X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
-        model.fit_generator(generator=self.batch_generator(X_train, y_train, 32),
-                            epochs=5,
-                            validation_data=(X_val, y_val),
-                            steps_per_epoch=X_train.shape[0] / 32)
+        model_checkpoint_callback = ModelCheckpoint(filepath='../saved_models/ann.hdf5',
+                                                    monitor='val_acc')
+        history = model.fit_generator(generator=self.batch_generator(X_train, y_train, 32),
+                                        epochs=1,
+                                        validation_data=(X_val, y_val),
+                                        steps_per_epoch=X_train.shape[0] / 32,
+                                        callbacks=[model_checkpoint_callback])
+        np.save('../saved_models/ann_history.npy', history.history)
         y_pred_prob = model.predict(X_val)
         y_pred = y_pred_prob.argmax(axis=1)
         accuracy = accuracy_score(y_val, y_pred)
