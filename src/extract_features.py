@@ -96,7 +96,7 @@ def read_input_data(filepath):
 def get_bag_of_words(data, ngram_flag):
     """ Given data, return a bag of words downscaled into "term frequency times inverse document frequency” (tf–idf).
     """
-    if int(ngram_flag):
+    if not int(ngram_flag):
         vectorizer = CountVectorizer()
         X_train_counts = vectorizer.fit_transform(data)
     else:
