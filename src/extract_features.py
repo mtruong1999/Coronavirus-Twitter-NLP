@@ -5,6 +5,7 @@ import pickle
 import re
 import string
 from utils import *
+import numpy as np
 
 import nltk
 from nltk.corpus import stopwords
@@ -66,6 +67,11 @@ def preprocess_data(data):
     elif DATA_SOURCE == "kaggle":
         data["OriginalTweet"] = data["OriginalTweet"].apply(text_filter)
         data['Sentiment'] = data['Sentiment'].apply(lambda x: sentiment_to_int(x))
+        # Remove data elements with empty tweets after filtering
+        #data = data[data['OriginalTweet'] != ''] # Filtering out blanks like this doesn't carry over to outside of function scope for some reason
+        data['OriginalTweet'] = data['OriginalTweet'].apply(lambda x : np.nan if not x else x)
+        data.dropna(subset=['OriginalTweet'], inplace = True)
+        data.reset_index(drop=True, inplace = True)
 
 
 def read_input_data(filepath):
@@ -133,7 +139,7 @@ def lemmatization(data):
 if __name__ == "__main__":
     if len(sys.argv) != 5:
         # <Path to Data Directory> - folder where data is located, in each algo
-        print("Error: Given " + str(len(sys.argv) - 1) + " arguments but expected 3.")
+        print("Error: Given " + str(len(sys.argv) - 1) + " arguments but expected 4.")
         print(
             "Usage: python3 src/extract_features.py <Path to Data File> <save to pickle? 0 for no, 1 for yes>"
             " <ngram bag of words flag: 0 for unigram, 1 for ngram>"
