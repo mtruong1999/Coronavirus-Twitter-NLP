@@ -33,7 +33,12 @@ def text_filter(text):
     text = re.sub(r"https?://\S+|www.\S+", "", text)
 
     # Remove punctuation, underscores, and other random symbols
-    text = re.sub(r"[^\w\s]|_", "", text)  # e.g. 's. Hey. +_=Woo' --> 's Hey Woo'
+    text = re.sub(r"[^\w\s]|_", " ", text)  # e.g. 's. Hey. +_=Woo' --> 's Hey Woo'
+
+    # Uncomment this to remove 'standalone' numbers, e.g. '5 times6' -> ' times6'
+    #text = re.sub("^\d+\s|\s\d+\s|\s\d+$", " ", text)
+    # Uncomment this to remove ALL numbers instead, e.g. '5 covid19' -> ' covid'
+    #text = re.sub("\d+", " ", text)
 
     # Remove stopwords
     text_list = word_tokenize(text)
