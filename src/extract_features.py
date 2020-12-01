@@ -93,18 +93,46 @@ def read_input_data(filepath):
     return df_data
 
 
-def get_bag_of_words(data, ngram_flag):
+def get_bag_of_words(data, ngram_flag, test=False, norm_flag="none"):
     """ Given data, return a bag of words downscaled into "term frequency times inverse document frequency” (tf–idf).
     """
-    if not int(ngram_flag):
-        vectorizer = CountVectorizer()
-        X_train_counts = vectorizer.fit_transform(data)
-    else:
-        vectorizer = CountVectorizer(analyzer="char_wb", ngram_range=(5, 5))
+    ngram_range_ = (5,5) if ngram_flag else (1,1)
+    analyzer_ = "char_wb" if ngram_flag else "word"
+
+    count_filename = DATA_SOURCE + "_"+norm_flag+"_count_vectorizer_"
+    count_filename += "ngram.pkl" if ngram_flag else "unigram.pkl"
+    count_path = os.path.join("..","project_data_pickles", count_filename)
+
+    tfidf_filename = DATA_SOURCE + "_"+norm_flag+"_tfidf_transformer_"
+    tfidf_filename += "ngram.pkl" if ngram_flag else "unigram.pkl"
+    tfidf_path = os.path.join("..","project_data_pickles", tfidf_filename)
+
+    if not test:
+        vectorizer = CountVectorizer(analyzer=analyzer_, ngram_range=ngram_range_)
         X_train_counts = vectorizer.fit_transform(data)
 
-    tfidf_transformer = TfidfTransformer()
-    X_train_tfidf = tfidf_transformer.fit_transform(X_train_counts)
+        tfidf_transformer = TfidfTransformer()
+        X_train_tfidf = tfidf_transformer.fit_transform(X_train_counts)
+
+        pickle.dump(
+            vectorizer,
+            open(count_path, "wb")
+        )
+        pickle.dump(
+            tfidf_transformer,
+            open(tfidf_path, "wb")
+        )
+        
+    else:
+        if not os.path.isfile(count_path) or not os.path.isfile(tfidf_path):
+            sys.exit("Data prep pickle file missing, must process the {} training set first.".format(DATA_SOURCE))
+
+        vectorizer = pickle.load(open(count_path, "rb"))
+        X_train_counts = vectorizer.transform(data)
+
+        tfidf_transformer = pickle.load(open(tfidf_path, "rb"))
+        X_train_tfidf = tfidf_transformer.transform(X_train_counts)
+
     return X_train_tfidf
 
 
@@ -149,8 +177,10 @@ if __name__ == "__main__":
 
     dataPath = sys.argv[1]
     save_to_pkl = sys.argv[2]
-    ngram_flag = sys.argv[3]
+    ngram_flag = int(sys.argv[3])
     norm_flag = sys.argv[4]
+
+    is_test = True if 'test' in dataPath or 'Test' in dataPath else False
 
     df_data = read_input_data(dataPath)
     print(df_data)
@@ -173,7 +203,7 @@ if __name__ == "__main__":
         train_data = lemmatization(train_data)
     print(train_data)
 
-    X_train_tfidf = get_bag_of_words(train_data, ngram_flag)
+    X_train_tfidf = get_bag_of_words(train_data, ngram_flag, test = is_test, norm_flag=norm_flag)
     print(X_train_tfidf)
 
     new_data = {'data': X_train_tfidf, 'labels': y_train, 'id': ids}
