@@ -14,7 +14,7 @@ from sklearn.metrics import accuracy_score
 # Code adapted from
 # https://towardsdatascience.com/another-twitter-sentiment-analysis-with-python-part-9-neural-networks-with-tfidf-vectors-using-d0b4af6be6d7
 
-input_dimension = 35386
+# input_dimension = 35386
 
 
 class ArtificialNeuralNetwork(object):
@@ -25,12 +25,9 @@ class ArtificialNeuralNetwork(object):
         The classifications will be stored in idSentiments. However, this
         will be left empty if using validation
         """
-        # self.ann = self.nn()
+        print('Using ANN...')
 
     def __call__(self, dataDirPath, idSentiments, train_file, test_file):
-        global input_dimension
-        # model = self.ann
-
         # Get data and labels from pickle file
         pickle_file = open(os.path.join(dataDirPath, train_file), "rb")
         train = pickle.load(pickle_file)
@@ -41,17 +38,16 @@ class ArtificialNeuralNetwork(object):
             X, y, test_size=0.2, random_state=42
         )
 
-        # This sets the gobal variable and lets the model scale to the input size
-        input_dimension = X_train.shape[1]
-        self.ann = self.nn()
-        model = self.ann
+        # Lets the model scale to the input size
+        input_dim = X_train.shape[1]
+        model = self.nn(input_dim)
 
         model_checkpoint_callback = ModelCheckpoint(
-            filepath="../saved_models/ann.hdf5", monitor="val_acc"
+            filepath="../saved_models/ann.hdf5", monitor="val_loss"
         )
         history = model.fit_generator(
             generator=self.batch_generator(X_train, y_train, 32),
-            epochs=1,
+            epochs=5,
             validation_data=(X_val, y_val),
             steps_per_epoch=X_train.shape[0] / 32,
             callbacks=[model_checkpoint_callback],
@@ -66,8 +62,11 @@ class ArtificialNeuralNetwork(object):
             test_pkl_file = open(os.path.join(dataDirPath, test_file), "rb")
             test = pickle.load(test_pkl_file)
             X_test = test["data"]
+            y_test = test["labels"]
             y_pred_prob = model.predict(X_test)
             y_pred = y_pred_prob.argmax(axis=1)
+            accuracy = accuracy_score(y_test, y_pred)
+            print('accuracy: ' + str(accuracy))
             idSentiments["id"] = test["id"]
             idSentiments["sentiment"] = y_pred
 
@@ -86,9 +85,9 @@ class ArtificialNeuralNetwork(object):
             if counter > number_of_batches:
                 counter = 0
 
-    def nn(self):
+    def nn(self, input_dim):
         model = Sequential()
-        model.add(Dense(64, activation="relu", input_dim=input_dimension))
+        model.add(Dense(64, activation="relu", input_dim=input_dim))
         model.add(Dense(5, activation="softmax"))
         model.compile(
             optimizer="adam",
