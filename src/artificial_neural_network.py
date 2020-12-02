@@ -14,8 +14,6 @@ from sklearn.metrics import accuracy_score
 # Code adapted from
 # https://towardsdatascience.com/another-twitter-sentiment-analysis-with-python-part-9-neural-networks-with-tfidf-vectors-using-d0b4af6be6d7
 
-# input_dimension = 35386
-
 
 class ArtificialNeuralNetwork(object):
     def __init__(self):
@@ -25,7 +23,7 @@ class ArtificialNeuralNetwork(object):
         The classifications will be stored in idSentiments. However, this
         will be left empty if using validation
         """
-        print('Using ANN...')
+        print("Using ANN...")
 
     def __call__(self, dataDirPath, idSentiments, train_file, test_file):
         # Get data and labels from pickle file
@@ -66,7 +64,7 @@ class ArtificialNeuralNetwork(object):
             y_pred_prob = model.predict(X_test)
             y_pred = y_pred_prob.argmax(axis=1)
             accuracy = accuracy_score(y_test, y_pred)
-            print('accuracy: ' + str(accuracy))
+            print("accuracy: " + str(accuracy))
             idSentiments["id"] = test["id"]
             idSentiments["sentiment"] = y_pred
 
