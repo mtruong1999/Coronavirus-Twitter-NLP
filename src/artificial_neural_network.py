@@ -14,6 +14,8 @@ from sklearn.metrics import accuracy_score
 # Code adapted from
 # https://towardsdatascience.com/another-twitter-sentiment-analysis-with-python-part-9-neural-networks-with-tfidf-vectors-using-d0b4af6be6d7
 
+input_dimension = 35386
+
 
 class ArtificialNeuralNetwork(object):
     def __init__(self):
@@ -23,10 +25,11 @@ class ArtificialNeuralNetwork(object):
         The classifications will be stored in idSentiments. However, this
         will be left empty if using validation
         """
-        self.ann = self.nn()
+        # self.ann = self.nn()
 
     def __call__(self, dataDirPath, idSentiments, train_file, test_file):
-        model = self.ann
+        global input_dimension
+        # model = self.ann
 
         # Get data and labels from pickle file
         pickle_file = open(os.path.join(dataDirPath, train_file), "rb")
@@ -37,6 +40,12 @@ class ArtificialNeuralNetwork(object):
         X_train, X_val, y_train, y_val = train_test_split(
             X, y, test_size=0.2, random_state=42
         )
+
+        # This sets the gobal variable and lets the model scale to the input size
+        input_dimension = X_train.shape[1]
+        self.ann = self.nn()
+        model = self.ann
+
         model_checkpoint_callback = ModelCheckpoint(
             filepath="../saved_models/ann.hdf5", monitor="val_acc"
         )
@@ -78,9 +87,8 @@ class ArtificialNeuralNetwork(object):
                 counter = 0
 
     def nn(self):
-        # TODO: get input_dim for now all data is 53335 and 1000 rows is 5135
         model = Sequential()
-        model.add(Dense(64, activation="relu", input_dim=53335))
+        model.add(Dense(64, activation="relu", input_dim=input_dimension))
         model.add(Dense(5, activation="softmax"))
         model.compile(
             optimizer="adam",
