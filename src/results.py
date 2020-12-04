@@ -67,7 +67,7 @@ if __name__ == '__main__':
     plt.plot(history['loss'])
     plt.plot(history['val_loss'])
     plt.title('Model Loss')
-    plt.ylabel('accuracy')
+    plt.ylabel('loss')
     plt.xlabel('epoch')
     plt.legend(['train', 'val'], loc='upper right')
     plt.savefig('../results/loss.png')
