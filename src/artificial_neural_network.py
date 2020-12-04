@@ -3,9 +3,8 @@ import sys
 import numpy as np
 import pickle
 from keras.models import Sequential
-from keras.layers import Dense, Dropout
+from keras.layers import Dense, Dropout, Conv1D, MaxPooling1D, Flatten, InputLayer, BatchNormalization
 from keras.callbacks import ModelCheckpoint
-from keras.layers import Flatten
 from keras.layers.embeddings import Embedding
 from keras.preprocessing import sequence
 from sklearn.model_selection import train_test_split
@@ -39,6 +38,7 @@ class ArtificialNeuralNetwork(object):
         # Lets the model scale to the input size
         input_dim = X_train.shape[1]
         model = self.nn(input_dim)
+        print(model.summary())
 
         model_checkpoint_callback = ModelCheckpoint(
             filepath="../saved_models/ann.hdf5", monitor="val_loss"
