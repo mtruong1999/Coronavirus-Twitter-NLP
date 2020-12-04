@@ -1,7 +1,7 @@
 import os
 import sys
 import argparse
-import seaborn as sn
+import seaborn as sns
 from sklearn.metrics import confusion_matrix
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -43,7 +43,7 @@ if __name__ == "__main__":
     y_true = test_data["labels"]
 
     cm = confusion_matrix(y_true, y_pred)
-    sn.heatmap(cm, annot=True)
+    sns.heatmap(cm, annot=True)
 
     plt.title("Confusion Matrix")
     plt.ylabel("True Sentiment")
