@@ -2,13 +2,12 @@ import os
 import sys
 import numpy as np
 import pickle
-from keras.models import Sequential
-from keras.layers import Dense, Dropout, Conv1D, MaxPooling1D, Flatten, InputLayer, BatchNormalization
+from keras.models import Sequential, load_model
+from keras.layers import Dense
 from keras.callbacks import ModelCheckpoint
-from keras.layers.embeddings import Embedding
-from keras.preprocessing import sequence
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
+from utils import *
 
 # Code adapted from
 # https://towardsdatascience.com/another-twitter-sentiment-analysis-with-python-part-9-neural-networks-with-tfidf-vectors-using-d0b4af6be6d7
@@ -24,12 +23,21 @@ class ArtificialNeuralNetwork(object):
         """
         print("Using ANN...")
 
-    def __call__(self, dataDirPath, idSentiments, train_file, test_file):
+    def __call__(self, dataDirPath, idSentiments, train_file, test_file, transfer_flag):
         # Get data and labels from pickle file
         pickle_file = open(os.path.join(dataDirPath, train_file), "rb")
         train = pickle.load(pickle_file)
         X = train["data"]
         y = train["labels"]
+
+        if transfer_flag:
+            y = y.apply(lambda x: covid_to_stanford(x))
+        print(y)
+
+        if "stanford" in train_file:
+            X, X_val, y, y_val = train_test_split(
+                X, y, train_size=41100, random_state=42
+            )
 
         X_train, X_val, y_train, y_val = train_test_split(
             X, y, test_size=0.2, random_state=42
@@ -37,6 +45,8 @@ class ArtificialNeuralNetwork(object):
 
         # Lets the model scale to the input size
         input_dim = X_train.shape[1]
+        print(input_dim)
+
         model = self.nn(input_dim)
         print(model.summary())
 
