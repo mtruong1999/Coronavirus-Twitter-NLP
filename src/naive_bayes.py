@@ -38,7 +38,10 @@ class NaiveBayes(object):
             test_pkl_file = open(os.path.join(dataDirPath, test_file), "rb")
             test = pickle.load(test_pkl_file)
             X_test = test["data"]
+            y_test = test["labels"]
             model.fit(X, y)
             y_pred = model.predict(X_test)
             idSentiments["id"] = test["id"]
             idSentiments["sentiment"] = y_pred
+            accuracy = model.score(X_test, y_test)
+            print(accuracy)
