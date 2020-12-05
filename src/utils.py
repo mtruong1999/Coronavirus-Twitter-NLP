@@ -11,6 +11,14 @@ INT_TO_SENTIMENT_DICT = {
 
 SENTIMENT_TO_INT_DICT = {v: k for k, v in INT_TO_SENTIMENT_DICT.items()}
 
+COVID_TO_STANFORD_DICT = {
+    0: 0,
+    1: 0,
+    2: 2,
+    3: 4,
+    4: 4
+}
+
 def int_to_sentiment(val):
     if val not in INT_TO_SENTIMENT_DICT:
         raise ValueError("Invalid sentiment integer: {}".format(val))
@@ -21,3 +29,7 @@ def sentiment_to_int(val):
         raise ValueError("Invalid sentiment string: {}".format(val))
     return SENTIMENT_TO_INT_DICT[val]
 
+def covid_to_stanford(val):
+    if val not in COVID_TO_STANFORD_DICT:
+        raise ValueError("Invalid sentiment string: {}".format(val))
+    return COVID_TO_STANFORD_DICT[val]
