@@ -6,6 +6,7 @@ import re
 import string
 from utils import *
 import numpy as np
+import argparse
 
 import nltk
 from nltk.corpus import stopwords
@@ -39,7 +40,7 @@ def text_filter(text):
     # Uncomment this to remove 'standalone' numbers, e.g. '5 times6' -> ' times6'
     # text = re.sub("^\d+\s|\s\d+\s|\s\d+$", " ", text)
     # Uncomment this to remove ALL numbers instead, e.g. '5 covid19' -> ' covid'
-    # text = re.sub("\d+", " ", text)
+    text = re.sub("\d+", " ", text)
 
     # Remove stopwords
     text_list = word_tokenize(text)
@@ -69,7 +70,9 @@ def preprocess_data(data):
 
     if DATA_SOURCE == "stanford":
         data[5] = data[5].apply(text_filter)
-        # TODO: change sentiments to integers for stanford data
+        data[5] = data[5].apply(lambda x: np.nan if not x else x)
+        data.dropna(subset=[5], inplace=True)
+        data.reset_index(drop=True, inplace=True)
     elif DATA_SOURCE == "kaggle":
         data["OriginalTweet"] = data["OriginalTweet"].apply(text_filter)
         data["Sentiment"] = data["Sentiment"].apply(lambda x: sentiment_to_int(x))
@@ -101,7 +104,7 @@ def read_input_data(filepath):
     return df_data
 
 
-def get_bag_of_words(data, ngram_flag, test=False, norm_flag="none"):
+def get_bag_of_words(data, ngram_flag, test=False, norm_flag="none", max_features=None):
     """ Given data, return a bag of words downscaled into "term frequency times inverse document frequency” (tf–idf).
     """
     ngram_range_ = (5, 5) if ngram_flag else (1, 1)
@@ -116,7 +119,7 @@ def get_bag_of_words(data, ngram_flag, test=False, norm_flag="none"):
     tfidf_path = os.path.join("..", "project_data_pickles", tfidf_filename)
 
     if not test:
-        vectorizer = CountVectorizer(analyzer=analyzer_, ngram_range=ngram_range_)
+        vectorizer = CountVectorizer(analyzer=analyzer_, ngram_range=ngram_range_, max_features=max_features)
         X_train_counts = vectorizer.fit_transform(data)
 
         tfidf_transformer = TfidfTransformer()
@@ -171,20 +174,26 @@ def lemmatization(data):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 5:
-        # <Path to Data Directory> - folder where data is located, in each algo
-        print("Error: Given " + str(len(sys.argv) - 1) + " arguments but expected 4.")
-        print(
-            "Usage: python3 src/extract_features.py <Path to Data File> <save to pickle? 0 for no, 1 for yes>"
-            " <ngram bag of words flag: 0 for unigram, 1 for ngram>"
-            "<normalization type: stem, lemmatize or none>"
-        )
-        sys.exit(1)
-
+    parser = argparse.ArgumentParser()
+    parser.add_argument('data_path',
+                        help='path to data file')
+    parser.add_argument('save_to_pkl',
+                        help='save to pickle? 0 for no, 1 for yes')
+    parser.add_argument('ngram_flag',
+                        help='0 for unigram, 1 for ngram')
+    parser.add_argument('norm_flag',
+                        help='normalization type: stem, lemmatize or none')
+    parser.add_argument('--max_features',
+                        default=None,
+                        type=int,
+                        help='max number of features (used for transfer learning')
+    args = parser.parse_args()
+    
     dataPath = sys.argv[1]
     save_to_pkl = sys.argv[2]
     ngram_flag = int(sys.argv[3])
     norm_flag = sys.argv[4]
+    max_features = args.max_features
 
     is_test = True if "test" in dataPath or "Test" in dataPath else False
 
@@ -210,7 +219,7 @@ if __name__ == "__main__":
     print(train_data)
 
     X_train_tfidf = get_bag_of_words(
-        train_data, ngram_flag, test=is_test, norm_flag=norm_flag
+        train_data, ngram_flag, test=is_test, norm_flag=norm_flag, max_features=max_features
     )
     print(X_train_tfidf)
 
