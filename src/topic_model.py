@@ -1,16 +1,44 @@
 import argparse
+import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import pickle
 import pyLDAvis
 import os
 import warnings
+import seaborn as sns
 import sys
 from pyLDAvis import sklearn as sklearn_lda
 from sklearn.decomposition import LatentDirichletAllocation as LDA
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
+sns.set_style("whitegrid")
 
 # Adapted from this guide: https://towardsdatascience.com/end-to-end-topic-modeling-in-python-latent-dirichlet-allocation-lda-35ce4ed6b3e0
+
+# Helper function
+def plot_10_most_common_words(count_data, count_vectorizer):
+    import matplotlib.pyplot as plt
+
+    words = count_vectorizer.get_feature_names()
+    total_counts = np.zeros(len(words))
+    for t in count_data:
+        total_counts += t.toarray()[0]
+
+    count_dict = zip(words, total_counts)
+    count_dict = sorted(count_dict, key=lambda x: x[1], reverse=True)[0:10]
+    words = [w[0] for w in count_dict]
+    counts = [w[1] for w in count_dict]
+    x_pos = np.arange(len(words))
+
+    plt.figure(2, figsize=(15, 15 / 1.6180))
+    plt.subplot(title="10 most common words")
+    sns.set_context("notebook", font_scale=1.25, rc={"lines.linewidth": 2.5})
+    sns.barplot(x_pos, counts, palette="husl")
+    plt.xticks(x_pos, words, rotation=90)
+    plt.xlabel("words")
+    plt.ylabel("counts")
+    plt.show()
 
 
 # Helper function
@@ -67,6 +95,10 @@ if __name__ == "__main__":
     vectorizer_pkl = open(os.path.join(dataDirPath, vectorizer_file), "rb")
     count_vectorizer = pickle.load(vectorizer_pkl)
 
+    # Visualise the 10 most common words
+    if True:  # toggle plotting on or off
+        plot_10_most_common_words(train_data["data"], count_vectorizer)
+
     # Tweak the two parameters below
     number_topics = 5
     number_words = 10  # Create and fit the LDA model
@@ -76,9 +108,7 @@ if __name__ == "__main__":
     print_topics(lda, count_vectorizer, number_words)
 
     LDAvis_data_filepath = os.path.join("../ldavis/viz" + str(number_topics))
-    # # this is a bit time consuming - make the if statement True
-    # # if you want to execute visualization prep yourself
-    if True:
+    if True:  # toggle on or off computation and saving
         LDAvis_prepared = sklearn_lda.prepare(lda, train_data["data"], count_vectorizer)
         with open(LDAvis_data_filepath, "wb") as f:
             pickle.dump(LDAvis_prepared, f)
