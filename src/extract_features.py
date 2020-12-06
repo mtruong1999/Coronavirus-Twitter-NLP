@@ -121,31 +121,31 @@ def get_bag_of_words(data, ngram_flag, test=False, norm_flag="none", max_feature
     ngram_range_ = (5, 5) if ngram_flag else (1, 1)
     analyzer_ = "char_wb" if ngram_flag else "word"
 
-    # count_filename = DATA_SOURCE + "_" + norm_flag + "_count_vectorizer_"
-    # count_filename += "ngram.pkl" if ngram_flag else "unigram.pkl"
-    # count_path = os.path.join("..", "project_data_pickles", count_filename)
-    #
-    # tfidf_filename = DATA_SOURCE + "_" + norm_flag + "_tfidf_transformer_"
-    # tfidf_filename += "ngram.pkl" if ngram_flag else "unigram.pkl"
-    # tfidf_path = os.path.join("..", "project_data_pickles", tfidf_filename)
+    count_filename = DATA_SOURCE + "_" + norm_flag + "_count_vectorizer_"
+    count_filename += "ngram.pkl" if ngram_flag else "unigram.pkl"
+    count_path = os.path.join("..", "project_data_pickles", count_filename)
+
+    tfidf_filename = DATA_SOURCE + "_" + norm_flag + "_tfidf_transformer_"
+    tfidf_filename += "ngram.pkl" if ngram_flag else "unigram.pkl"
+    tfidf_path = os.path.join("..", "project_data_pickles", tfidf_filename)
 
     # Used for transfer learning...
-    if DATA_SOURCE == 'kaggle':
-        count_filename = DATA_SOURCE + "_" + norm_flag + "_count_vectorizer_"
-        count_filename += "ngram.pkl" if ngram_flag else "unigram.pkl"
-        count_path = os.path.join("..", "project_data_pickles", count_filename)
-
-        tfidf_filename = DATA_SOURCE + "_" + norm_flag + "_tfidf_transformer_"
-        tfidf_filename += "ngram.pkl" if ngram_flag else "unigram.pkl"
-        tfidf_path = os.path.join("..", "project_data_pickles", tfidf_filename)
-    else:
-        count_filename = 'kaggle' + "_" + norm_flag + "_count_vectorizer_"
-        count_filename += "ngram.pkl" if ngram_flag else "unigram.pkl"
-        count_path = os.path.join("..", "project_data_pickles", count_filename)
-
-        tfidf_filename = 'kaggle' + "_" + norm_flag + "_tfidf_transformer_"
-        tfidf_filename += "ngram.pkl" if ngram_flag else "unigram.pkl"
-        tfidf_path = os.path.join("..", "project_data_pickles", tfidf_filename)
+    # if DATA_SOURCE == 'kaggle':
+    #     count_filename = DATA_SOURCE + "_" + norm_flag + "_count_vectorizer_"
+    #     count_filename += "ngram.pkl" if ngram_flag else "unigram.pkl"
+    #     count_path = os.path.join("..", "project_data_pickles", count_filename)
+    #
+    #     tfidf_filename = DATA_SOURCE + "_" + norm_flag + "_tfidf_transformer_"
+    #     tfidf_filename += "ngram.pkl" if ngram_flag else "unigram.pkl"
+    #     tfidf_path = os.path.join("..", "project_data_pickles", tfidf_filename)
+    # else:
+    #     count_filename = 'kaggle' + "_" + norm_flag + "_count_vectorizer_"
+    #     count_filename += "ngram.pkl" if ngram_flag else "unigram.pkl"
+    #     count_path = os.path.join("..", "project_data_pickles", count_filename)
+    #
+    #     tfidf_filename = 'kaggle' + "_" + norm_flag + "_tfidf_transformer_"
+    #     tfidf_filename += "ngram.pkl" if ngram_flag else "unigram.pkl"
+    #     tfidf_path = os.path.join("..", "project_data_pickles", tfidf_filename)
 
     if not test:
         vectorizer = CountVectorizer(analyzer=analyzer_, ngram_range=ngram_range_, max_features=max_features)
