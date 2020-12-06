@@ -29,7 +29,6 @@ class NaiveBayes(object):
 
         if transfer_flag:
             y = y.apply(lambda x: covid_to_stanford(x))
-        print(y)
 
         if not test_file:
             X_train, X_val, y_train, y_val = train_test_split(

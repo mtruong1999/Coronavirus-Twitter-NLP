@@ -32,7 +32,6 @@ class ArtificialNeuralNetwork(object):
 
         if transfer_flag:
             y = y.apply(lambda x: covid_to_stanford(x))
-        print(y)
 
         if "stanford" in train_file:
             X, X_val, y, y_val = train_test_split(
@@ -45,7 +44,6 @@ class ArtificialNeuralNetwork(object):
 
         # Lets the model scale to the input size
         input_dim = X_train.shape[1]
-        print(input_dim)
 
         model = self.nn(input_dim)
         print(model.summary())
