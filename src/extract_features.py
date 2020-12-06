@@ -118,6 +118,24 @@ def get_bag_of_words(data, ngram_flag, test=False, norm_flag="none", max_feature
     tfidf_filename += "ngram.pkl" if ngram_flag else "unigram.pkl"
     tfidf_path = os.path.join("..", "project_data_pickles", tfidf_filename)
 
+    # Used for transfer learning...
+    # if DATA_SOURCE == 'kaggle':
+    #     count_filename = DATA_SOURCE + "_" + norm_flag + "_count_vectorizer_"
+    #     count_filename += "ngram.pkl" if ngram_flag else "unigram.pkl"
+    #     count_path = os.path.join("..", "project_data_pickles", count_filename)
+    # 
+    #     tfidf_filename = DATA_SOURCE + "_" + norm_flag + "_tfidf_transformer_"
+    #     tfidf_filename += "ngram.pkl" if ngram_flag else "unigram.pkl"
+    #     tfidf_path = os.path.join("..", "project_data_pickles", tfidf_filename)
+    # else:
+    #     count_filename = 'kaggle' + "_" + norm_flag + "_count_vectorizer_"
+    #     count_filename += "ngram.pkl" if ngram_flag else "unigram.pkl"
+    #     count_path = os.path.join("..", "project_data_pickles", count_filename)
+    #
+    #     tfidf_filename = 'kaggle' + "_" + norm_flag + "_tfidf_transformer_"
+    #     tfidf_filename += "ngram.pkl" if ngram_flag else "unigram.pkl"
+    #     tfidf_path = os.path.join("..", "project_data_pickles", tfidf_filename)
+
     if not test:
         vectorizer = CountVectorizer(analyzer=analyzer_, ngram_range=ngram_range_, max_features=max_features)
         X_train_counts = vectorizer.fit_transform(data)
@@ -188,7 +206,7 @@ if __name__ == "__main__":
                         type=int,
                         help='max number of features (used for transfer learning')
     args = parser.parse_args()
-    
+
     dataPath = sys.argv[1]
     save_to_pkl = sys.argv[2]
     ngram_flag = int(sys.argv[3])
