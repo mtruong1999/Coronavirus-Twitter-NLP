@@ -21,3 +21,9 @@ def sentiment_to_int(val):
         raise ValueError("Invalid sentiment string: {}".format(val))
     return SENTIMENT_TO_INT_DICT[val]
 
+def reduce_sentiment(val):
+    if val == "Extremely Negative":
+        return "Negative"
+    elif val == "Extremely Positive":
+        return "Positive"
+    return val

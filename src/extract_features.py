@@ -83,7 +83,8 @@ def preprocess_data(data):
         # TODO: change sentiments to integers for stanford data
     elif DATA_SOURCE == "kaggle":
         data["OriginalTweet"] = data["OriginalTweet"].apply(text_filter)
-        data["Sentiment"] = data["Sentiment"].apply(lambda x: sentiment_to_int(x))
+        data["Sentiment"] = data["Sentiment"].apply(reduce_sentiment)
+        data["Sentiment"] = data["Sentiment"].apply(sentiment_to_int)
         # Remove data elements with empty tweets after filtering
         # data = data[data['OriginalTweet'] != ''] # Filtering out blanks like this doesn't carry over to outside of function scope for some reason
         data["OriginalTweet"] = data["OriginalTweet"].apply(
