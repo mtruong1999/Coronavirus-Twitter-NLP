@@ -17,10 +17,15 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn import preprocessing
 
+from ekphrasis.classes.segmenter import Segmenter
+from ekphrasis.classes.spellcorrect import SpellCorrector
+
 # Global Variables
 DATA_SOURCE = ""
 STOP_WORDS = []
-
+# found ekphrasis english corpus to be better than twitter corpus
+CORRECTOR = SpellCorrector(corpus="english")
+SEGMENTER = Segmenter(corpus="english")
 # Some variables for testing
 read_nrows = None  # When None, all rows are read.
 
@@ -31,19 +36,25 @@ def text_filter(text):
     text = re.sub(r"#|(@\w+)", "", text)  # e.g. @Tim Hi #hello --> ' Hi hello'
 
     # Remove links (e.g. any that starts with https, http, www)
-    # Tried so many...this was the simplest that actually worked
     text = re.sub(r"https?://\S+|www.\S+", "", text)
 
     # Remove punctuation, underscores, and other random symbols
     text = re.sub(r"[^\w\s]|_", " ", text)  # e.g. 's. Hey. +_=Woo' --> 's Hey Woo'
 
-    # Uncomment this to remove 'standalone' numbers, e.g. '5 times6' -> ' times6'
-    # text = re.sub("^\d+\s|\s\d+\s|\s\d+$", " ", text)
-    # Uncomment this to remove ALL numbers instead, e.g. '5 covid19' -> ' covid'
+    # Remove ALL numbers. E.g. '5 covid19' -> ' covid'
     text = re.sub("\d+", " ", text)
 
-    # Remove stopwords
+    # Tokenize sentence
     text_list = word_tokenize(text)
+
+    # Normalize elongated words. E.g. aaannndd -> and
+    text_list = [CORRECTOR.normalize_elongated(w) for w in text_list]
+
+    # Segment words. E.g. coronaisbad -> corona is bad
+    # Ignore words with 'covid' because segmenter does 'covid' -> 'co vid'
+    text_list = [SEGMENTER.segment(w) if 'covid' not in w else w for w in text_list]
+
+    # Remove stopwords
     text_list = [word for word in text_list if not word in STOP_WORDS]
 
     return " ".join(text_list)
@@ -110,31 +121,31 @@ def get_bag_of_words(data, ngram_flag, test=False, norm_flag="none", max_feature
     ngram_range_ = (5, 5) if ngram_flag else (1, 1)
     analyzer_ = "char_wb" if ngram_flag else "word"
 
-    count_filename = DATA_SOURCE + "_" + norm_flag + "_count_vectorizer_"
-    count_filename += "ngram.pkl" if ngram_flag else "unigram.pkl"
-    count_path = os.path.join("..", "project_data_pickles", count_filename)
-
-    tfidf_filename = DATA_SOURCE + "_" + norm_flag + "_tfidf_transformer_"
-    tfidf_filename += "ngram.pkl" if ngram_flag else "unigram.pkl"
-    tfidf_path = os.path.join("..", "project_data_pickles", tfidf_filename)
+    # count_filename = DATA_SOURCE + "_" + norm_flag + "_count_vectorizer_"
+    # count_filename += "ngram.pkl" if ngram_flag else "unigram.pkl"
+    # count_path = os.path.join("..", "project_data_pickles", count_filename)
+    #
+    # tfidf_filename = DATA_SOURCE + "_" + norm_flag + "_tfidf_transformer_"
+    # tfidf_filename += "ngram.pkl" if ngram_flag else "unigram.pkl"
+    # tfidf_path = os.path.join("..", "project_data_pickles", tfidf_filename)
 
     # Used for transfer learning...
-    # if DATA_SOURCE == 'kaggle':
-    #     count_filename = DATA_SOURCE + "_" + norm_flag + "_count_vectorizer_"
-    #     count_filename += "ngram.pkl" if ngram_flag else "unigram.pkl"
-    #     count_path = os.path.join("..", "project_data_pickles", count_filename)
-    # 
-    #     tfidf_filename = DATA_SOURCE + "_" + norm_flag + "_tfidf_transformer_"
-    #     tfidf_filename += "ngram.pkl" if ngram_flag else "unigram.pkl"
-    #     tfidf_path = os.path.join("..", "project_data_pickles", tfidf_filename)
-    # else:
-    #     count_filename = 'kaggle' + "_" + norm_flag + "_count_vectorizer_"
-    #     count_filename += "ngram.pkl" if ngram_flag else "unigram.pkl"
-    #     count_path = os.path.join("..", "project_data_pickles", count_filename)
-    #
-    #     tfidf_filename = 'kaggle' + "_" + norm_flag + "_tfidf_transformer_"
-    #     tfidf_filename += "ngram.pkl" if ngram_flag else "unigram.pkl"
-    #     tfidf_path = os.path.join("..", "project_data_pickles", tfidf_filename)
+    if DATA_SOURCE == 'kaggle':
+        count_filename = DATA_SOURCE + "_" + norm_flag + "_count_vectorizer_"
+        count_filename += "ngram.pkl" if ngram_flag else "unigram.pkl"
+        count_path = os.path.join("..", "project_data_pickles", count_filename)
+
+        tfidf_filename = DATA_SOURCE + "_" + norm_flag + "_tfidf_transformer_"
+        tfidf_filename += "ngram.pkl" if ngram_flag else "unigram.pkl"
+        tfidf_path = os.path.join("..", "project_data_pickles", tfidf_filename)
+    else:
+        count_filename = 'kaggle' + "_" + norm_flag + "_count_vectorizer_"
+        count_filename += "ngram.pkl" if ngram_flag else "unigram.pkl"
+        count_path = os.path.join("..", "project_data_pickles", count_filename)
+
+        tfidf_filename = 'kaggle' + "_" + norm_flag + "_tfidf_transformer_"
+        tfidf_filename += "ngram.pkl" if ngram_flag else "unigram.pkl"
+        tfidf_path = os.path.join("..", "project_data_pickles", tfidf_filename)
 
     if not test:
         vectorizer = CountVectorizer(analyzer=analyzer_, ngram_range=ngram_range_, max_features=max_features)
