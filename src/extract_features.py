@@ -205,8 +205,18 @@ if __name__ == "__main__":
 
     if norm_flag == "stem":
         train_data = stemming(train_data)
-    if norm_flag == "lemmatize":
+        if read_nrows == None and not is_test:
+            filename = "../project_data_pickles/" + DATA_SOURCE + "_data_stemmed.pkl"
+            pickle.dump(
+                train_data, open(filename, "wb",),
+            )
+    if norm_flag == "lemmatize" and not is_test:
         train_data = lemmatization(train_data)
+        if read_nrows == None:
+            filename = "../project_data_pickles/" + DATA_SOURCE + "_data_lemmatized.pkl"
+            pickle.dump(
+                train_data, open(filename, "wb",),
+            )
     print(train_data)
 
     X_train_tfidf = get_bag_of_words(
