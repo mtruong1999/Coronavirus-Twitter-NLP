@@ -23,9 +23,6 @@ def round_float(s):
 
 df_data = pd.concat([df1, df2])
 df_data = df_data.applymap(round_float).copy()
-# df_data = df_data["Beta"].map(
-#     lambda x: round(x, 2) if isinstance(float(x), (float)) else x
-# )
 print(df_data)
 print(
     "Optimal Parameters:\n",
@@ -35,13 +32,7 @@ print(
 
 fig = plt.figure(figsize=(15, 9))
 fig = sns.scatterplot(
-    data=df_data,
-    # x=df_data.index,
-    x="Topics",
-    y="Coherence",
-    style="Alpha",
-    hue="Beta",
-    s=200,
+    data=df_data, x="Topics", y="Coherence", style="Alpha", hue="Beta", s=200,
 )
 sns.despine()
 plt.xlabel("Number of Topics", fontsize=25)
