@@ -114,8 +114,8 @@ def gensim_LDA(
     grid["Validation_Set"] = {}
 
     # Topics range
-    min_topics = 10
-    max_topics = 15
+    min_topics = 16
+    max_topics = 22
     step_size = 1
     topics_range = range(min_topics, max_topics + 1, step_size)
 
@@ -143,6 +143,7 @@ def gensim_LDA(
 
     # Can take a long time to run
     if grid_search:
+        print("Beginning grid search:")
         total_ = len(topics_range) * len(corpus_title)
         total_ = total_ * len(beta) * len(alpha) if search_ab else total_
         pbar = tqdm.tqdm(total=total_)
@@ -217,10 +218,11 @@ def gensim_LDA(
         )
         pbar.close()
     else:
+        print("Generating model from predefined optimal parameters...")
         # set the following according to the output of the above gridsearch
-        optimal_num_topics = 9
+        optimal_num_topics = 15
         optimal_alpha = "symmetric"
-        optimal_beta = 0.91
+        optimal_beta = 0.61
         lda_model = gensim.models.LdaMulticore(
             corpus=corpus,
             id2word=id2word,
@@ -232,6 +234,11 @@ def gensim_LDA(
             alpha=optimal_alpha,
             eta=optimal_beta,
         )
+
+        coherence_model_lda = CoherenceModel(
+            model=lda_model, texts=data_lemmatized, dictionary=id2word, coherence="c_v",
+        )
+        print("Coherence score:", coherence_model_lda.get_coherence())
 
         LDAvis_prepared = pyLDAvis.gensim.prepare(lda_model, corpus, id2word)
         pyLDAvis.save_html(
