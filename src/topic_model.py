@@ -81,38 +81,6 @@ def sklearn_LDA(count_vectorizer, data, number_topics, number_words):
     )
 
 
-def compute_coherence_values(corpus, dictionary, k, a=None, b=None):
-    if a == None or b == None:
-        lda_model = gensim.models.LdaMulticore(
-            corpus=corpus,
-            id2word=dictionary,
-            num_topics=k,
-            random_state=42,
-            chunksize=100,
-            passes=10,
-            per_word_topics=True,
-        )
-    else:
-        lda_model = gensim.models.LdaMulticore(
-            corpus=corpus,
-            id2word=dictionary,
-            num_topics=k,
-            random_state=42,
-            chunksize=100,
-            passes=10,
-            per_word_topics=True,
-            alpha=a,
-            eta=b,
-        )
-
-    coherence_model_lda = CoherenceModel(
-        model=lda_model, texts=data_lemmatized, dictionary=dictionary, coherence="c_v",
-    )
-    coherence_lda = coherence_model_lda.get_coherence()
-
-    return coherence_lda
-
-
 def gensim_LDA(
     lemmatized_data,
     data,
@@ -146,10 +114,10 @@ def gensim_LDA(
     grid["Validation_Set"] = {}
 
     # Topics range
-    min_topics = 7
-    max_topics = 10
+    min_topics = 10
+    max_topics = 15
     step_size = 1
-    topics_range = range(min_topics, max_topics, step_size)
+    topics_range = range(min_topics, max_topics + 1, step_size)
 
     # Alpha parameter
     alpha = list(np.arange(0.01, 1, 0.3))
@@ -186,10 +154,6 @@ def gensim_LDA(
                 for a in alpha:
                     # iterare through beta values
                     for b in beta:
-                        # get the coherence score for the given parameters
-                        # cv = compute_coherence_values(
-                        #     corpus=corpus, dictionary=id2word, k=k, a=a, b=b
-                        # )
                         lda_model = gensim.models.LdaMulticore(
                             corpus=corpus,
                             id2word=id2word,
@@ -253,7 +217,10 @@ def gensim_LDA(
         )
         pbar.close()
     else:
-        optimal_num_topics = 8  # set according to the output of the above gridsearch
+        # set the following according to the output of the above gridsearch
+        optimal_num_topics = 9
+        optimal_alpha = "symmetric"
+        optimal_beta = 0.91
         lda_model = gensim.models.LdaMulticore(
             corpus=corpus,
             id2word=id2word,
@@ -262,12 +229,20 @@ def gensim_LDA(
             chunksize=100,
             passes=10,
             per_word_topics=True,
+            alpha=optimal_alpha,
+            eta=optimal_beta,
         )
 
         LDAvis_prepared = pyLDAvis.gensim.prepare(lda_model, corpus, id2word)
         pyLDAvis.save_html(
             LDAvis_prepared,
-            "../ldavis/gensim_viz_" + str(optimal_num_topics) + "topics.html",
+            "../ldavis/gensim_viz_"
+            + str(optimal_alpha)
+            + "_"
+            + str(optimal_beta)
+            + "_"
+            + str(optimal_num_topics)
+            + "topics.html",
         )
 
     # Print the Keywords of the topics
