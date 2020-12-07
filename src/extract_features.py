@@ -16,10 +16,15 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn import preprocessing
 
+from ekphrasis.classes.segmenter import Segmenter
+from ekphrasis.classes.spellcorrect import SpellCorrector
+
 # Global Variables
 DATA_SOURCE = ""
 STOP_WORDS = []
-
+# found ekphrasis english corpus to be better than twitter corpus
+CORRECTOR = SpellCorrector(corpus="english")
+SEGMENTER = Segmenter(corpus="english")
 # Some variables for testing
 read_nrows = None  # When None, all rows are read.
 
@@ -30,19 +35,25 @@ def text_filter(text):
     text = re.sub(r"#|(@\w+)", "", text)  # e.g. @Tim Hi #hello --> ' Hi hello'
 
     # Remove links (e.g. any that starts with https, http, www)
-    # Tried so many...this was the simplest that actually worked
     text = re.sub(r"https?://\S+|www.\S+", "", text)
 
     # Remove punctuation, underscores, and other random symbols
     text = re.sub(r"[^\w\s]|_", " ", text)  # e.g. 's. Hey. +_=Woo' --> 's Hey Woo'
 
-    # Uncomment this to remove 'standalone' numbers, e.g. '5 times6' -> ' times6'
-    # text = re.sub("^\d+\s|\s\d+\s|\s\d+$", " ", text)
-    # Uncomment this to remove ALL numbers instead, e.g. '5 covid19' -> ' covid'
-    # text = re.sub("\d+", " ", text)
+    # Remove ALL numbers. E.g. '5 covid19' -> ' covid'
+    text = re.sub("\d+", " ", text)
+
+    # Tokenize sentence
+    text_list = word_tokenize(text)
+
+    # Normalize elongated words. E.g. aaannndd -> and
+    text_list = [CORRECTOR.normalize_elongated(w) for w in text_list]
+
+    # Segment words. E.g. coronaisbad -> corona is bad
+    # Ignore words with 'covid' because segmenter does 'covid' -> 'co vid'
+    text_list = [SEGMENTER.segment(w) if 'covid' not in w else w for w in text_list]
 
     # Remove stopwords
-    text_list = word_tokenize(text)
     text_list = [word for word in text_list if not word in STOP_WORDS]
 
     return " ".join(text_list)
@@ -72,7 +83,8 @@ def preprocess_data(data):
         # TODO: change sentiments to integers for stanford data
     elif DATA_SOURCE == "kaggle":
         data["OriginalTweet"] = data["OriginalTweet"].apply(text_filter)
-        data["Sentiment"] = data["Sentiment"].apply(lambda x: sentiment_to_int(x))
+        data["Sentiment"] = data["Sentiment"].apply(reduce_sentiment)
+        data["Sentiment"] = data["Sentiment"].apply(sentiment_to_int)
         # Remove data elements with empty tweets after filtering
         # data = data[data['OriginalTweet'] != ''] # Filtering out blanks like this doesn't carry over to outside of function scope for some reason
         data["OriginalTweet"] = data["OriginalTweet"].apply(
