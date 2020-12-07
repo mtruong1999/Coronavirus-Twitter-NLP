@@ -147,8 +147,8 @@ def gensim_LDA(
     grid["Validation_Set"] = {}
 
     # Topics range
-    min_topics = 4
-    max_topics = 11
+    min_topics = 7
+    max_topics = 10
     step_size = 1
     topics_range = range(min_topics, max_topics, step_size)
 
@@ -270,6 +270,10 @@ def gensim_LDA(
             LDAvis_prepared,
             "../ldavis/gensim_viz_" + str(optimal_num_topics) + "topics.html",
         )
+
+    # Print the Keywords of the topics
+    pprint(lda_model.print_topics())
+    doc_lda = lda_model[corpus]
 
 
 if __name__ == "__main__":
