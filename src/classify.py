@@ -21,6 +21,10 @@ if __name__ == "__main__":
                         type=str,
                         default=None,
                         help='name of test pickle file')
+    parser.add_argument('--transfer_flag',
+                        type=int,
+                        default=0,
+                        help='flag to use transfer learning')
 
     args = parser.parse_args()
 
@@ -38,6 +42,7 @@ if __name__ == "__main__":
 
     train_file = args.train_file
     test_file = args.test_file
+    transfer_flag = args.transfer_flag
 
     if not os.path.isfile(os.path.join(dataDirPath, train_file)):
         print('Error: Train file ' + train_file + ' does not exist.')
@@ -51,7 +56,7 @@ if __name__ == "__main__":
     # First column is some sort of identifier for the tweets, I think "UserName"?
     # Second column is the class label.
     idSentiments = {}
-    classifier = CLASSIFIER_TO_CONSTRUCTOR[classifier_type]()(dataDirPath, idSentiments, train_file, test_file)
+    classifier = CLASSIFIER_TO_CONSTRUCTOR[classifier_type]()(dataDirPath, idSentiments, train_file, test_file, transfer_flag)
     print(idSentiments)
     
     if idSentiments != {}:

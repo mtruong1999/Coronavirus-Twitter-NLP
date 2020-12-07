@@ -80,7 +80,9 @@ def preprocess_data(data):
 
     if DATA_SOURCE == "stanford":
         data[5] = data[5].apply(text_filter)
-        # TODO: change sentiments to integers for stanford data
+        data[5] = data[5].apply(lambda x: np.nan if not x else x)
+        data.dropna(subset=[5], inplace=True)
+        data.reset_index(drop=True, inplace=True)
     elif DATA_SOURCE == "kaggle":
         data["OriginalTweet"] = data["OriginalTweet"].apply(text_filter)
         data["Sentiment"] = data["Sentiment"].apply(reduce_sentiment)
@@ -126,6 +128,24 @@ def get_bag_of_words(data, ngram_flag, test=False, norm_flag="none"):
     tfidf_filename = DATA_SOURCE + "_" + norm_flag + "_tfidf_transformer_"
     tfidf_filename += "ngram.pkl" if ngram_flag else "unigram.pkl"
     tfidf_path = os.path.join("..", "project_data_pickles", tfidf_filename)
+
+    # Used for transfer learning...
+    # if DATA_SOURCE == 'kaggle':
+    #     count_filename = DATA_SOURCE + "_" + norm_flag + "_count_vectorizer_"
+    #     count_filename += "ngram.pkl" if ngram_flag else "unigram.pkl"
+    #     count_path = os.path.join("..", "project_data_pickles", count_filename)
+    #
+    #     tfidf_filename = DATA_SOURCE + "_" + norm_flag + "_tfidf_transformer_"
+    #     tfidf_filename += "ngram.pkl" if ngram_flag else "unigram.pkl"
+    #     tfidf_path = os.path.join("..", "project_data_pickles", tfidf_filename)
+    # else:
+    #     count_filename = 'kaggle' + "_" + norm_flag + "_count_vectorizer_"
+    #     count_filename += "ngram.pkl" if ngram_flag else "unigram.pkl"
+    #     count_path = os.path.join("..", "project_data_pickles", count_filename)
+    #
+    #     tfidf_filename = 'kaggle' + "_" + norm_flag + "_tfidf_transformer_"
+    #     tfidf_filename += "ngram.pkl" if ngram_flag else "unigram.pkl"
+    #     tfidf_path = os.path.join("..", "project_data_pickles", tfidf_filename)
 
     if not test:
         vectorizer = CountVectorizer(analyzer=analyzer_, ngram_range=ngram_range_)

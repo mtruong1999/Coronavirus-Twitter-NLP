@@ -41,6 +41,8 @@ if __name__ == '__main__':
     pickle_file = open(os.path.join(args.test_dir, args.test_file), 'rb')
     test_data = pickle.load(pickle_file)
 
+    file_name = args.test_file[0:-9]
+
     y_pred = results['sentiment']
     y_true = test_data['labels']
 
@@ -50,7 +52,7 @@ if __name__ == '__main__':
     plt.title('Confusion Matrix')
     plt.ylabel('True Sentiment')
     plt.xlabel('Predicted Sentiment')
-    plt.savefig('../results/cm.png')
+    plt.savefig('../results/' + file_name + 'cm.png')
     plt.close()
 
     # Model Accuracy and Loss
@@ -61,7 +63,7 @@ if __name__ == '__main__':
     plt.ylabel('accuracy')
     plt.xlabel('epoch')
     plt.legend(['train', 'val'], loc='lower right')
-    plt.savefig('../results/accuracy.png')
+    plt.savefig('../results/' + file_name + 'accuracy.png')
     plt.close()
 
     plt.plot(history['loss'])
@@ -70,5 +72,5 @@ if __name__ == '__main__':
     plt.ylabel('loss')
     plt.xlabel('epoch')
     plt.legend(['train', 'val'], loc='upper right')
-    plt.savefig('../results/loss.png')
+    plt.savefig('../results/' + file_name + 'loss.png')
     plt.close()
