@@ -122,6 +122,7 @@ def gensim_LDA(
     chunksize=100,
     per_word_topics=True,
     coherence="c_v",
+    grid_search=False,
     search_ab=False,
 ):
     """Create and output data from a fitted LDA model.
@@ -132,6 +133,7 @@ def gensim_LDA(
     chunksize -- (int) Number of documents to be used in each training chunk (default 100)
     per_word_topics -- (bool) If True, the model also computes a list of topics, sorted in descending order of most likely topics for each word, along with their phi values multiplied by the feature length (i.e. word count) (default True)
     coherence -- ({'u_mass', 'c_v', 'c_uci', 'c_npmi'}) – Coherence measure to be used. Fastest method - ‘u_mass’, ‘c_uci’ also known as c_pmi. (default "c_v")
+    grid_search -- (bool) If True, run a gridsearch over num_topics param, set search_ab to gridsearch over alpha/eta (default False)
     search_ab -- (bool) If True, search for best alpha(a) and eta(b) parameters (very slow) (default False)
     """
     data_lemmatized = [i.split(" ") for i in lemmatized_data]
@@ -145,8 +147,8 @@ def gensim_LDA(
     grid["Validation_Set"] = {}
 
     # Topics range
-    min_topics = 1
-    max_topics = 2
+    min_topics = 4
+    max_topics = 11
     step_size = 1
     topics_range = range(min_topics, max_topics, step_size)
 
@@ -173,8 +175,7 @@ def gensim_LDA(
     }
 
     # Can take a long time to run
-    run_grid_search = False
-    if run_grid_search:
+    if grid_search:
         total_ = len(topics_range) * len(corpus_title)
         total_ = total_ * len(beta) * len(alpha) if search_ab else total_
         pbar = tqdm.tqdm(total=total_)
@@ -252,20 +253,22 @@ def gensim_LDA(
         )
         pbar.close()
     else:
+        optimal_num_topics = 8  # set according to the output of the above gridsearch
         lda_model = gensim.models.LdaMulticore(
             corpus=corpus,
             id2word=id2word,
-            num_topics=9,
+            num_topics=optimal_num_topics,
             random_state=42,
             chunksize=100,
             passes=10,
             per_word_topics=True,
         )
 
-    LDAvis_prepared = pyLDAvis.gensim.prepare(lda_model, corpus, id2word)
-    pyLDAvis.save_html(
-        LDAvis_prepared, "../ldavis/gensim_viz_" + str(number_topics) + "topics.html"
-    )
+        LDAvis_prepared = pyLDAvis.gensim.prepare(lda_model, corpus, id2word)
+        pyLDAvis.save_html(
+            LDAvis_prepared,
+            "../ldavis/gensim_viz_" + str(optimal_num_topics) + "topics.html",
+        )
 
 
 if __name__ == "__main__":
@@ -321,7 +324,7 @@ if __name__ == "__main__":
     data_lemmatized = pickle.load(data_lemmatized_pkl)
 
     # Tweak this parameter
-    number_topics = 6
+    number_topics = 8
 
     run_sklearn_LDA = False
     if run_sklearn_LDA:
@@ -331,6 +334,10 @@ if __name__ == "__main__":
     run_gensim_LDA = True
     if run_gensim_LDA:
         gensim_LDA(
-            data_lemmatized, train_data["data"], n_topics=number_topics, search_ab=False
+            data_lemmatized,
+            train_data["data"],
+            n_topics=number_topics,
+            grid_search=False,
+            search_ab=False,
         )
 
