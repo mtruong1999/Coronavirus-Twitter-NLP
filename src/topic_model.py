@@ -216,6 +216,7 @@ def gensim_LDA(
                         model_results["Alpha"].append(a)
                         model_results["Beta"].append(b)
                         model_results["Coherence"].append(cv)
+                        pbar.update(1)
             else:
                 lda_model = gensim.models.LdaMulticore(
                     corpus=corpus,
@@ -241,8 +242,8 @@ def gensim_LDA(
                 model_results["Alpha"].append(-1)
                 model_results["Beta"].append(-1)
                 model_results["Coherence"].append(cv)
+                pbar.update(1)
 
-            pbar.update(1)
         pd.DataFrame(model_results).to_csv(
             "../results/lda_tuning_results_"
             + str(min_topics)
