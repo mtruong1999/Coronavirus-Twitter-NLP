@@ -8,10 +8,12 @@ import os
 import warnings
 import seaborn as sns
 import sys
+import tqdm
 from pyLDAvis import sklearn as sklearn_lda
 from sklearn.decomposition import LatentDirichletAllocation as LDA
 import gensim  # More comprehensive LDA library than sklearn's
 import gensim.corpora as corpora
+import pyLDAvis.gensim
 from pprint import pprint
 
 from gensim.models import CoherenceModel  # Compute Coherence Score
@@ -23,8 +25,6 @@ sns.set_style("whitegrid")
 
 # Helper function
 def plot_N_most_common_words(N, count_data, count_vectorizer):
-    import matplotlib.pyplot as plt
-
     words = count_vectorizer.get_feature_names()
     total_counts = np.zeros(len(words))
     for t in count_data:
@@ -73,11 +73,45 @@ def sklearn_LDA(count_vectorizer, data, number_topics, number_words):
         LDAvis_prepared = sklearn_lda.prepare(lda, data, count_vectorizer)
         with open(LDAvis_data_filepath, "wb") as f:
             pickle.dump(LDAvis_prepared, f)
+    else:
+        # load the pre-prepared pyLDAvis data from disk
+        with open(LDAvis_data_filepath, "rb") as f:
+            LDAvis_prepared = pickle.load(f)
+    pyLDAvis.save_html(
+        LDAvis_prepared, "../ldavis/gensim_viz_" + str(number_topics) + "topics.html"
+    )
 
-    # load the pre-prepared pyLDAvis data from disk
-    with open(LDAvis_data_filepath, "rb") as f:
-        LDAvis_prepared = pickle.load(f)
-    pyLDAvis.save_html(LDAvis_prepared, "../ldavis/viz" + str(number_topics) + ".html")
+
+def compute_coherence_values(corpus, dictionary, k, a=None, b=None):
+    if a == None or b == None:
+        lda_model = gensim.models.LdaMulticore(
+            corpus=corpus,
+            id2word=dictionary,
+            num_topics=k,
+            random_state=42,
+            chunksize=100,
+            passes=10,
+            per_word_topics=True,
+        )
+    else:
+        lda_model = gensim.models.LdaMulticore(
+            corpus=corpus,
+            id2word=dictionary,
+            num_topics=k,
+            random_state=42,
+            chunksize=100,
+            passes=10,
+            per_word_topics=True,
+            alpha=a,
+            eta=b,
+        )
+
+    coherence_model_lda = CoherenceModel(
+        model=lda_model, texts=data_lemmatized, dictionary=dictionary, coherence="c_v",
+    )
+    coherence_lda = coherence_model_lda.get_coherence()
+
+    return coherence_lda
 
 
 def gensim_LDA(
@@ -88,6 +122,7 @@ def gensim_LDA(
     chunksize=100,
     per_word_topics=True,
     coherence="c_v",
+    search_ab=False,
 ):
     """Create and output data from a fitted LDA model.
 
@@ -95,8 +130,9 @@ def gensim_LDA(
     n_topics -- (int) The number of requested latent topics to be extracted from the training corpus (default 10)
     passes -- (int) Number of passes through the corpus during training (default 10)
     chunksize -- (int) Number of documents to be used in each training chunk (default 100)
-    per_word_topics -- (Bool) If True, the model also computes a list of topics, sorted in descending order of most likely topics for each word, along with their phi values multiplied by the feature length (i.e. word count) (default True)
+    per_word_topics -- (bool) If True, the model also computes a list of topics, sorted in descending order of most likely topics for each word, along with their phi values multiplied by the feature length (i.e. word count) (default True)
     coherence -- ({'u_mass', 'c_v', 'c_uci', 'c_npmi'}) – Coherence measure to be used. Fastest method - ‘u_mass’, ‘c_uci’ also known as c_pmi. (default "c_v")
+    search_ab -- (bool) If True, search for best alpha(a) and eta(b) parameters (very slow) (default False)
     """
     data_lemmatized = [i.split(" ") for i in lemmatized_data]
 
@@ -105,24 +141,131 @@ def gensim_LDA(
     texts = data_lemmatized  # Term Document Frequency
     corpus = [id2word.doc2bow(text) for text in texts]  # View
 
-    lda_model = gensim.models.LdaMulticore(
-        corpus=corpus,
-        id2word=id2word,
-        num_topics=n_topics,
-        random_state=42,
-        chunksize=100,
-        passes=10,
-        per_word_topics=True,
-    )
+    grid = {}
+    grid["Validation_Set"] = {}
 
-    pprint(lda_model.print_topics())
-    doc_lda = lda_model[corpus]
+    # Topics range
+    min_topics = 1
+    max_topics = 2
+    step_size = 1
+    topics_range = range(min_topics, max_topics, step_size)
 
-    coherence_model_lda = CoherenceModel(
-        model=lda_model, texts=data_lemmatized, dictionary=id2word, coherence="c_v"
+    # Alpha parameter
+    alpha = list(np.arange(0.01, 1, 0.3))
+    alpha.append("symmetric")
+    alpha.append("asymmetric")
+
+    # Beta parameter
+    beta = list(np.arange(0.01, 1, 0.3))
+    beta.append("symmetric")
+
+    # Validation sets
+    num_of_docs = len(corpus)
+
+    corpus_title = ["100% Corpus"]
+
+    model_results = {
+        "Validation_Set": [],
+        "Topics": [],
+        "Alpha": [],
+        "Beta": [],
+        "Coherence": [],
+    }
+
+    # Can take a long time to run
+    run_grid_search = False
+    if run_grid_search:
+        total_ = len(topics_range) * len(corpus_title)
+        total_ = total_ * len(beta) * len(alpha) if search_ab else total_
+        pbar = tqdm.tqdm(total=total_)
+
+        # iterate through number of topics
+        for k in topics_range:
+            if search_ab:  # currently broken
+                # iterate through alpha values
+                for a in alpha:
+                    # iterare through beta values
+                    for b in beta:
+                        # get the coherence score for the given parameters
+                        # cv = compute_coherence_values(
+                        #     corpus=corpus, dictionary=id2word, k=k, a=a, b=b
+                        # )
+                        lda_model = gensim.models.LdaMulticore(
+                            corpus=corpus,
+                            id2word=id2word,
+                            num_topics=k,
+                            random_state=42,
+                            chunksize=100,
+                            passes=10,
+                            per_word_topics=True,
+                            alpha=a,
+                            eta=b,
+                        )
+
+                        coherence_model_lda = CoherenceModel(
+                            model=lda_model,
+                            texts=data_lemmatized,
+                            dictionary=id2word,
+                            coherence="c_v",
+                        )
+                        cv = coherence_model_lda.get_coherence()
+                        # Save the model results
+                        model_results["Validation_Set"].append(corpus_title[0])
+                        model_results["Topics"].append(k)
+                        model_results["Alpha"].append(a)
+                        model_results["Beta"].append(b)
+                        model_results["Coherence"].append(cv)
+            else:
+                lda_model = gensim.models.LdaMulticore(
+                    corpus=corpus,
+                    id2word=id2word,
+                    num_topics=k,
+                    random_state=42,
+                    chunksize=100,
+                    passes=10,
+                    per_word_topics=True,
+                )
+
+                coherence_model_lda = CoherenceModel(
+                    model=lda_model,
+                    texts=data_lemmatized,
+                    dictionary=id2word,
+                    coherence="c_v",
+                )
+                cv = coherence_model_lda.get_coherence()
+
+                # Save the model results
+                model_results["Validation_Set"].append(corpus_title[0])
+                model_results["Topics"].append(k)
+                model_results["Alpha"].append(-1)
+                model_results["Beta"].append(-1)
+                model_results["Coherence"].append(cv)
+
+            pbar.update(1)
+        pd.DataFrame(model_results).to_csv(
+            "../results/lda_tuning_results_"
+            + str(min_topics)
+            + "-"
+            + str(max_topics)
+            + ".csv",
+            index=False,
+        )
+        pbar.close()
+    else:
+        lda_model = gensim.models.LdaMulticore(
+            corpus=corpus,
+            id2word=id2word,
+            num_topics=9,
+            random_state=42,
+            chunksize=100,
+            passes=10,
+            per_word_topics=True,
+        )
+
+    LDAvis_prepared = pyLDAvis.gensim.prepare(lda_model, corpus, id2word)
+    pyLDAvis.save_html(
+        LDAvis_prepared, "../ldavis/gensim_viz_" + str(number_topics) + "topics.html"
     )
-    coherence_lda = coherence_model_lda.get_coherence()
-    print("\nCoherence Score: ", coherence_lda)
 
 
 if __name__ == "__main__":
@@ -187,5 +330,7 @@ if __name__ == "__main__":
 
     run_gensim_LDA = True
     if run_gensim_LDA:
-        gensim_LDA(data_lemmatized, train_data["data"], n_topics=number_topics)
+        gensim_LDA(
+            data_lemmatized, train_data["data"], n_topics=number_topics, search_ab=False
+        )
 
