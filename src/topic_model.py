@@ -15,7 +15,6 @@ import gensim  # More comprehensive LDA library than sklearn's
 import gensim.corpora as corpora
 import pyLDAvis.gensim
 from pprint import pprint
-
 from gensim.models import CoherenceModel  # Compute Coherence Score
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
