@@ -6,7 +6,6 @@ import re
 import string
 from utils import *
 import numpy as np
-import argparse
 
 import nltk
 from nltk.corpus import stopwords
@@ -17,10 +16,15 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn import preprocessing
 
+from ekphrasis.classes.segmenter import Segmenter
+from ekphrasis.classes.spellcorrect import SpellCorrector
+
 # Global Variables
 DATA_SOURCE = ""
 STOP_WORDS = []
-
+# found ekphrasis english corpus to be better than twitter corpus
+CORRECTOR = SpellCorrector(corpus="english")
+SEGMENTER = Segmenter(corpus="english")
 # Some variables for testing
 read_nrows = None  # When None, all rows are read.
 
@@ -31,19 +35,25 @@ def text_filter(text):
     text = re.sub(r"#|(@\w+)", "", text)  # e.g. @Tim Hi #hello --> ' Hi hello'
 
     # Remove links (e.g. any that starts with https, http, www)
-    # Tried so many...this was the simplest that actually worked
     text = re.sub(r"https?://\S+|www.\S+", "", text)
 
     # Remove punctuation, underscores, and other random symbols
     text = re.sub(r"[^\w\s]|_", " ", text)  # e.g. 's. Hey. +_=Woo' --> 's Hey Woo'
 
-    # Uncomment this to remove 'standalone' numbers, e.g. '5 times6' -> ' times6'
-    # text = re.sub("^\d+\s|\s\d+\s|\s\d+$", " ", text)
-    # Uncomment this to remove ALL numbers instead, e.g. '5 covid19' -> ' covid'
+    # Remove ALL numbers. E.g. '5 covid19' -> ' covid'
     text = re.sub("\d+", " ", text)
 
-    # Remove stopwords
+    # Tokenize sentence
     text_list = word_tokenize(text)
+
+    # Normalize elongated words. E.g. aaannndd -> and
+    text_list = [CORRECTOR.normalize_elongated(w) for w in text_list]
+
+    # Segment words. E.g. coronaisbad -> corona is bad
+    # Ignore words with 'covid' because segmenter does 'covid' -> 'co vid'
+    text_list = [SEGMENTER.segment(w) if 'covid' not in w else w for w in text_list]
+
+    # Remove stopwords
     text_list = [word for word in text_list if not word in STOP_WORDS]
 
     return " ".join(text_list)
@@ -75,7 +85,8 @@ def preprocess_data(data):
         data.reset_index(drop=True, inplace=True)
     elif DATA_SOURCE == "kaggle":
         data["OriginalTweet"] = data["OriginalTweet"].apply(text_filter)
-        data["Sentiment"] = data["Sentiment"].apply(lambda x: sentiment_to_int(x))
+        data["Sentiment"] = data["Sentiment"].apply(reduce_sentiment)
+        data["Sentiment"] = data["Sentiment"].apply(sentiment_to_int)
         # Remove data elements with empty tweets after filtering
         # data = data[data['OriginalTweet'] != ''] # Filtering out blanks like this doesn't carry over to outside of function scope for some reason
         data["OriginalTweet"] = data["OriginalTweet"].apply(
@@ -104,7 +115,7 @@ def read_input_data(filepath):
     return df_data
 
 
-def get_bag_of_words(data, ngram_flag, test=False, norm_flag="none", max_features=None):
+def get_bag_of_words(data, ngram_flag, test=False, norm_flag="none"):
     """ Given data, return a bag of words downscaled into "term frequency times inverse document frequency” (tf–idf).
     """
     ngram_range_ = (5, 5) if ngram_flag else (1, 1)
@@ -123,7 +134,7 @@ def get_bag_of_words(data, ngram_flag, test=False, norm_flag="none", max_feature
     #     count_filename = DATA_SOURCE + "_" + norm_flag + "_count_vectorizer_"
     #     count_filename += "ngram.pkl" if ngram_flag else "unigram.pkl"
     #     count_path = os.path.join("..", "project_data_pickles", count_filename)
-    # 
+    #
     #     tfidf_filename = DATA_SOURCE + "_" + norm_flag + "_tfidf_transformer_"
     #     tfidf_filename += "ngram.pkl" if ngram_flag else "unigram.pkl"
     #     tfidf_path = os.path.join("..", "project_data_pickles", tfidf_filename)
@@ -137,7 +148,7 @@ def get_bag_of_words(data, ngram_flag, test=False, norm_flag="none", max_feature
     #     tfidf_path = os.path.join("..", "project_data_pickles", tfidf_filename)
 
     if not test:
-        vectorizer = CountVectorizer(analyzer=analyzer_, ngram_range=ngram_range_, max_features=max_features)
+        vectorizer = CountVectorizer(analyzer=analyzer_, ngram_range=ngram_range_)
         X_train_counts = vectorizer.fit_transform(data)
 
         tfidf_transformer = TfidfTransformer()
@@ -192,26 +203,20 @@ def lemmatization(data):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument('data_path',
-                        help='path to data file')
-    parser.add_argument('save_to_pkl',
-                        help='save to pickle? 0 for no, 1 for yes')
-    parser.add_argument('ngram_flag',
-                        help='0 for unigram, 1 for ngram')
-    parser.add_argument('norm_flag',
-                        help='normalization type: stem, lemmatize or none')
-    parser.add_argument('--max_features',
-                        default=None,
-                        type=int,
-                        help='max number of features (used for transfer learning')
-    args = parser.parse_args()
+    if len(sys.argv) != 5:
+        # <Path to Data Directory> - folder where data is located, in each algo
+        print("Error: Given " + str(len(sys.argv) - 1) + " arguments but expected 4.")
+        print(
+            "Usage: python3 src/extract_features.py <Path to Data File> <save to pickle? 0 for no, 1 for yes>"
+            " <ngram bag of words flag: 0 for unigram, 1 for ngram>"
+            "<normalization type: stem, lemmatize or none>"
+        )
+        sys.exit(1)
 
     dataPath = sys.argv[1]
     save_to_pkl = sys.argv[2]
     ngram_flag = int(sys.argv[3])
     norm_flag = sys.argv[4]
-    max_features = args.max_features
 
     is_test = True if "test" in dataPath or "Test" in dataPath else False
 
@@ -232,12 +237,22 @@ if __name__ == "__main__":
 
     if norm_flag == "stem":
         train_data = stemming(train_data)
-    if norm_flag == "lemmatize":
+        if read_nrows == None and not is_test:
+            filename = "../project_data_pickles/" + DATA_SOURCE + "_data_stemmed.pkl"
+            pickle.dump(
+                train_data, open(filename, "wb",),
+            )
+    if norm_flag == "lemmatize" and not is_test:
         train_data = lemmatization(train_data)
+        if read_nrows == None:
+            filename = "../project_data_pickles/" + DATA_SOURCE + "_data_lemmatized.pkl"
+            pickle.dump(
+                train_data, open(filename, "wb",),
+            )
     print(train_data)
 
     X_train_tfidf = get_bag_of_words(
-        train_data, ngram_flag, test=is_test, norm_flag=norm_flag, max_features=max_features
+        train_data, ngram_flag, test=is_test, norm_flag=norm_flag
     )
     print(X_train_tfidf)
 
