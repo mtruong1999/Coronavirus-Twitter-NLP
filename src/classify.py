@@ -10,10 +10,7 @@ CLASSIFIER_TO_CONSTRUCTOR = {"nb" : NaiveBayes, "ann" : ArtificialNeuralNetwork}
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('Path_to_Data_Directory',
-                        help='folder where data is located in each algo')
-    parser.add_argument('Classifier_Type',
-                        help='either nb or ann')
+
     parser.add_argument('--train_file',
                         default='kaggle_1000rows_ngram_tfidf.pkl',
                         help='name of train pickle file')
