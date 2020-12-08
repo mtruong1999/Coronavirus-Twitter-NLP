@@ -22,6 +22,8 @@ To clean, preprocess and extract features from the data set, run:
 ```
 python extract_features.py <Path to Data File> <Save to Pickle> <Ngram> <Normalization Type> 
 ```
+**NOTE:** To save pickle files, create a `project_data_pickles/` in the directory above where this 
+repository is saved to.
 
 * `<Save to Pickle>` 0 for no, 1 for yes
 * `<Ngram>` 0 for unigram, 1 for 5-gram
@@ -29,7 +31,7 @@ python extract_features.py <Path to Data File> <Save to Pickle> <Ngram> <Normali
 
 To classify tweets, run:
 ```
-python classify.py <Path to Data Dir> <Classifier Type>
+python classify.py <Path to Pickle File Dir> <Classifier Type>
     --train_file <Train Data File>
     --test_file <Test Data File>
     --transfer_flag <Transfer Learning? 0 or 1>
