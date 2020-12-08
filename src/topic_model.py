@@ -269,9 +269,6 @@ if __name__ == "__main__":
         help="name of train pickle file",
     )
     parser.add_argument(
-        "--test_file", type=str, default=None, help="name of test pickle file"
-    )
-    parser.add_argument(
         "--vectorizer_file", type=str, default=None, help="name of vectorizer file"
     )
     parser.add_argument(
@@ -291,15 +288,13 @@ if __name__ == "__main__":
     if not os.path.isfile(os.path.join(dataDirPath, train_file)):
         print("Error: Train file " + train_file + " does not exist.")
         sys.exit(1)
-    if test_file:
-        if not os.path.isfile(os.path.join(dataDirPath, test_file)):
-            print("Error: Test file" + test_file + "does not exist.")
-            sys.exit(1)
     if not os.path.isfile(os.path.join(dataDirPath, vectorizer_file)):
-        print("Error: Vectorizer file " + train_file + " does not exist.")
+        print("Error: Vectorizer file " + vectorizer_file + " does not exist.")
         sys.exit(1)
     if not os.path.isfile(os.path.join(dataDirPath, data_lemmatized_file)):
-        print("Error: lemmatized_data file " + train_file + " does not exist.")
+        print(
+            "Error: Lemmatized_data file " + data_lemmatized_file + " does not exist."
+        )
         sys.exit(1)
 
     train_pkl = open(os.path.join(dataDirPath, train_file), "rb")
