@@ -55,3 +55,18 @@ python results.py
     --test_dir <Directory of test file>
     --history_dir <Directory of history file>
 ```
+
+To build a topic model or run a grid search over LDA parameters, run:
+```
+python topic_model.py <Path to Data Dir>
+    --train_file <Train Data File>
+    --vectorizer_file <Count Vectorizer File>
+    --lemmatized_data <Limatized Data File>
+```
+Flags choosing to either run a parameter grid search or build a model from previously discovered optimal parameters can be set in the code's main function. The default behavior is to build a model from previously discovered optimal parameters. If a grid search is performed, "lda_tuning_results_\<X-Y\>.csv" is written containing the results, for X, Y min-topic and max-topic bounds, respectively, for the grid search. If a grid search is not performed, a predefined model is built and an html file is saved to "gensim_viz_symmetric_0.61_15topics.html". This file is an interactive visualization of the topic model and can be opened in a web browser.
+
+To produce a plot of an analysis of the LDA grid search results, run:
+```
+python analyze_topic_model.py
+```
+This script assumes there exists the files "../results/lda_tuning_results_7-10.csv" and "../results/lda_tuning_results_10-15.csv". A figure is saved to "../results/tm_gs_results.pdf".
